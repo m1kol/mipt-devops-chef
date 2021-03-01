@@ -33,6 +33,16 @@ sudo chef-server-ctl user-create chef_admin Chef Admin admin@example.com 'admin1
 sudo chef-server-ctl org-create chef_org 'Chef Example Org' --association_user chef_admin --filename ./.chef/chef_org-validator.pem
 ```
 
+Добавляем настройку сервера в `/etc/opscode/chef-server.rb`:
+```
+server_name = "10.211.55.201"
+api_fqdn server_name
+nginx['url'] = "https://#{server_name}"
+nginx['server_name'] = server_name
+lb['fqdn'] = server_name
+bookshelf['vip'] = server_name
+```
+
 ## Настройка рабочей машины
 Для настройки рабочей машины заходим на неё.
 ```bash
@@ -90,7 +100,7 @@ knife ssl check
 ## Добавление и настройка узла
 Регистрация узла происходит с рабочей машины. Добавляем узел следующей командой:
 ```bash
-knife node add 10.211.55.202 -U vagrant --sudo
+knife bootstrap 10.211.55.202 -U vagrant --sudo
 ```
 
 Загружаем созданный во время генерации `cookbook` на сервер и добавляем его в `run-list` созданного узла.
@@ -103,5 +113,27 @@ knife node run_list add chef_node 'example'
 Заходим на сам узел и проверяем работу.
 ```bash
 vagrant ssh node
-chef-client
+sudo chef-client
 ```
+
+Сгенирируем ещё один `cookbook`
+```bash
+cd cookbooks
+chef generate cookbook sample
+```
+
+и создадим `recipe` со следующим содержанием
+```
+file "#{ENV['HOME']}/test.txt"
+    content "Test file content!"
+end
+```
+
+Также загрузим его на сервер и назначим в список выполнения узла.
+```bash
+cd ~/chef-repo/cookbooks
+knife upload cookbook sample
+knife node run_list add chef-client 'sample'
+```
+
+Затем снова проверим работу на нашем узле.
