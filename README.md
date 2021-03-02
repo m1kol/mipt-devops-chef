@@ -107,7 +107,7 @@ knife bootstrap 10.211.55.202 -U vagrant --sudo
 ```bash
 cd cookbooks
 knife cookbook upload example
-knife node run_list add chef_node 'example'
+knife node run_list add chef-client 'example'
 ```
 
 Заходим на сам узел и проверяем работу.
@@ -124,7 +124,7 @@ chef generate cookbook sample
 
 и создадим `recipe` со следующим содержанием
 ```
-file "#{ENV['HOME']}/test.txt"
+file "#{ENV['HOME']}/test.txt" do
     content "Test file content!"
 end
 ```
